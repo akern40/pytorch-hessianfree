@@ -2,7 +2,12 @@ from typing import Callable, Union
 
 import torch
 
-_preconditioners = {"diag": torch.diagonal}
+
+def _diagonal(A):
+    return torch.diagflat(torch.diagonal(A))
+
+
+_preconditioners = {"diag": _diagonal}
 
 
 def pcg(
