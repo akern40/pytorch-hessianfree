@@ -17,6 +17,7 @@ def pcg(
     preconditioner: str = "diag",  # A pre-defined preconditioner function
     max_iter: int = None,
     err_tol: float = 1e-6,
+    callback: Callable = None,
 ):
     """Compute the solution to Ax=b using the preconditioned conjugate gradient method"""
     if x0 is None:
@@ -35,7 +36,7 @@ def pcg(
     delta0 = residual.transpose(0, 1) @ direction
     delta_new = delta0
 
-    while count < max_iter and delta_new / delta0 > (err_tol ** 2):
+    while count < max_iter or delta_new / delta0 > (err_tol ** 2):
         q = A @ direction
         alpha = delta_new / (direction.transpose(0, 1) @ q)
         x += alpha * direction
