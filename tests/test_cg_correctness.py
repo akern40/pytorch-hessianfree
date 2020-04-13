@@ -4,10 +4,9 @@ from math import ceil, log10
 import numpy as np
 import torch
 from scipy.linalg import solve
-from scipy.stats import wishart
 
 from hessianfree.cg import pcg
-from hessianfree.utils import generate_pd_matrix
+from hessianfree.utils import generate_pd_matrix, draw_surface
 
 
 class TestPCG(unittest.TestCase):
@@ -22,20 +21,30 @@ class TestPCG(unittest.TestCase):
         self.assertTrue(torch.allclose(solution, cg_solution))
 
     def test_2d(self):
-        num_passed = 0
-        for _ in range(10000):
-            A = generate_pd_matrix(2)
+        self._test_nd(2)
 
-            b = torch.rand(2, 1)
+    def _test_nd(self, n, ok_failure_rate=0.05, ntests=1000):
+        num_failed = 0
 
-            solution = torch.from_numpy(solve(A.numpy(), b.numpy()))
+        for _ in range(ntests):
+            A = generate_pd_matrix(n)
+
+            b = torch.rand(n, 1)
+
+            solution = torch.as_tensor(solve(A.numpy(), b.numpy()))
             cg_solution = pcg(A, b)
 
-            largest_diff = max(torch.abs(solution - cg_solution)).item()
-            if largest_diff < 1e-5:
-                num_passed += 1
-        print(num_passed)
-        self.assertGreaterEqual(num_passed, 999, msg=f"Only passed {num_passed}/10000")
+            try:
+                assert torch.allclose(solution, cg_solution)
+            except AssertionError:
+                num_failed += 1
+
+        print(num_failed)
+        assert num_failed <= ntests * ok_failure_rate
+
+    # def test_nd(self):
+    #     for dim in range(2, 100):
+    #         self._test_nd(dim)
 
 
 if __name__ == "__main__":

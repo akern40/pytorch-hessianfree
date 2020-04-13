@@ -39,6 +39,10 @@ def pcg(
     while count < max_iter or delta_new / delta0 > (err_tol ** 2):
         q = A @ direction
         alpha = delta_new / (direction.transpose(0, 1) @ q)
+
+        if callable(callback):
+            callback(x, direction, alpha)
+
         x += alpha * direction
 
         if count % 50 == 0:

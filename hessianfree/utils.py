@@ -1,8 +1,10 @@
 import sys
-from math import log10, floor
+from math import floor, log10
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
-from numpy.linalg import cond
+from numpy.linalg import cond, solve
 from scipy.linalg import eigvals
 from scipy.stats import wishart
 
@@ -28,3 +30,37 @@ def _is_ill_conditioned(A):
 
 def _is_positive_definite(A):
     return all(eig > 0 for eig in eigvals(A))
+
+
+def draw_surface(A, b, pcg_solution, points, directions, alphas):
+    solution = solve(A, b)
+    solution_x = solution[0]
+    solution_y = solution[1]
+
+    x = np.linspace(min(solution_x, 0) - 5, max(solution_x, 0) + 5, 100)
+    y = np.linspace(min(solution_y, 0) - 5, max(solution_y, 0) + 5, 100)
+
+    X, Y = np.meshgrid(x, y)
+    Z = get_z(X, Y, A, b)
+
+    fig, ax = plt.subplots()
+    cs = ax.contourf(X, Y, Z, 50)
+    fig.colorbar(cs)
+
+    pcg_solution = pcg_solution.squeeze()
+
+    ax.plot(pcg_solution[0], pcg_solution[1], "ro")
+    ax.plot(solution_x, solution_y, "go")
+
+    for p, d, a in zip(points, directions, alphas):
+        ax.plot(p[0], p[1], "wo")
+        ax.arrow(p[0], p[1], a * d[0], a * d[1], color="w")
+
+    plt.show()
+
+
+def get_z(X, Y, A, b):
+    inputs = np.stack((X, Y), axis=1)
+    square_term = np.einsum("bij,ki,bkj->bj", inputs, A, inputs)
+    linear_term = np.einsum("ki,bkj->bj", b, inputs)
+    return 0.5 * square_term - linear_term
