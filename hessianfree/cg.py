@@ -1,6 +1,7 @@
 from typing import Callable, Union
 
 import torch
+import numpy as np
 
 
 def _diagonal(A):
@@ -33,12 +34,12 @@ def pcg(
     P_inv = torch.inverse(P)
     direction = P_inv @ residual
 
-    delta0 = residual.transpose(0, 1) @ direction
+    delta0 = residual.t() @ direction
     delta_new = delta0
 
     while count < max_iter or delta_new / delta0 > (err_tol ** 2):
         q = A @ direction
-        alpha = delta_new / (direction.transpose(0, 1) @ q)
+        alpha = delta_new / (direction.t() @ q)
 
         if callable(callback):
             callback(x, direction, alpha)
@@ -52,7 +53,7 @@ def pcg(
 
         s = P_inv @ residual
         delta_old = delta_new
-        delta_new = residual.transpose(0, 1) @ s
+        delta_new = residual.t() @ s
 
         beta = delta_new / delta_old
         direction = s + beta * direction

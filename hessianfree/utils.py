@@ -1,5 +1,5 @@
 import sys
-from math import floor, log10
+from math import ceil, log10
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,8 +22,7 @@ def generate_pd_matrix(n: int, as_torch: bool = True):
 
 
 def _is_ill_conditioned(A):
-    rcond = 1 / cond(A)
-    if floor(log10(rcond)) <= -8:
+    if cond(A) >= 1 / np.finfo(np.float32).eps:
         return True
     return False
 
