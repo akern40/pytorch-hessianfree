@@ -1,12 +1,9 @@
 import unittest
-from math import ceil, log10
 
-import numpy as np
 import torch
-from scipy.linalg import solve
 
 from hessianfree.cg import pcg
-from hessianfree.utils import generate_pd_matrix, draw_surface
+from hessianfree.utils import generate_pd_matrix
 
 
 class TestPCG(unittest.TestCase):
@@ -21,9 +18,9 @@ class TestPCG(unittest.TestCase):
         self.assertTrue(torch.allclose(solution, cg_solution))
 
     def test_2d(self):
-        self._test_nd(2)
+        self._test_nd(2, 100000)
 
-    def _test_nd(self, n, ok_failure_rate=0.05, ntests=1000):
+    def _test_nd(self, n, ok_failure_rate=0.00, ntests=10000):
         num_failed = 0
 
         for _ in range(ntests):
@@ -31,15 +28,16 @@ class TestPCG(unittest.TestCase):
 
             b = torch.rand(n, 1)
 
-            solution = torch.as_tensor(solve(A.numpy(), b.numpy()))
+            solution, _ = torch.solve(b, A)
             cg_solution = pcg(A, b)
 
             try:
                 assert torch.allclose(solution, cg_solution)
-            except AssertionError:
+            except AssertionError as e:
+                if ok_failure_rate == 0:
+                    raise e
                 num_failed += 1
 
-        print(num_failed)
         assert num_failed <= ntests * ok_failure_rate
 
     # def test_nd(self):

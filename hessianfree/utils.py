@@ -59,6 +59,24 @@ def draw_surface(A, b, pcg_solution, points, directions, alphas):
     plt.show()
 
 
+def draw_surface_3d(A, b):
+    solution = solve(A, b)
+    solution_x = solution[0]
+    solution_y = solution[1]
+
+    x = np.linspace(min(solution_x, 0) - 5, max(solution_x, 0) + 5, 100)
+    y = np.linspace(min(solution_y, 0) - 5, max(solution_y, 0) + 5, 100)
+
+    X, Y = np.meshgrid(x, y)
+    Z = get_z(X, Y, A, b)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+    ax.plot_surface(X, Y, Z, cmap="viridis")
+    plt.show()
+    # ax.scatter(solution_x, solution_y, c="w")
+
+
 def get_z(X, Y, A, b):
     inputs = np.stack((X, Y), axis=1)
     square_term = np.einsum("bij,ki,bkj->bj", inputs, A, inputs)
