@@ -8,7 +8,11 @@ def _diagonal(A):
     return torch.diagflat(torch.diagonal(A))
 
 
-_preconditioners = {"diag": _diagonal}
+def _eye_like(A):
+    return torch.eye(A.shape[0])
+
+
+_preconditioners = {"diag": _diagonal, "ident": _eye_like}
 
 
 def pcg(
@@ -17,8 +21,9 @@ def pcg(
     x0: Union[torch.Tensor, None] = None,
     preconditioner: str = "diag",  # A pre-defined preconditioner function
     max_iter: int = None,
-    err_tol: float = 1e-6,
+    err_tol: float = 1e-3,
     callback: Callable = None,
+    return_info: bool = True,
 ):
     """Compute the solution to Ax=b using the preconditioned conjugate gradient method"""
     if x0 is None:
@@ -37,7 +42,7 @@ def pcg(
     delta0 = residual.t() @ direction
     delta_new = delta0
 
-    while count < max_iter or delta_new / delta0 > (err_tol ** 2):
+    while count < max_iter and delta_new / delta0 > (err_tol ** 2):
         q = A @ direction
         alpha = delta_new / (direction.t() @ q)
 
@@ -60,4 +65,6 @@ def pcg(
 
         count += 1
 
+    if return_info:
+        return x, {"n_iter": count, "err": delta_new / delta0}
     return x
