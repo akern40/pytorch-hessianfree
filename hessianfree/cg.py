@@ -1,29 +1,24 @@
-from typing import Callable, Union
+from typing import Optional, Callable
 
 import torch
-import numpy as np
 
 
-def _diagonal(A):
-    return torch.diagflat(torch.diagonal(A))
+LinearOperator = Callable[[torch.Tensor], torch.Tensor]
 
 
-def _eye_like(A):
-    return torch.eye(A.shape[0])
-
-
-_preconditioners = {"diag": _diagonal, "ident": _eye_like}
+def _identity(x):
+    return x
 
 
 def pcg(
-    A: torch.Tensor,
+    A: LinearOperator,
     b: torch.Tensor,
-    x0: Union[torch.Tensor, None] = None,
-    preconditioner: str = "diag",  # A pre-defined preconditioner function
-    max_iter: int = None,
+    max_iter: int,
+    x0: Optional[torch.Tensor] = None,
+    preconditioner: Optional[LinearOperator] = None,
+    shape: Optional[int] = None,
     err_tol: float = 1e-3,
     callback: Callable = None,
-    return_info: bool = True,
 ):
     """Compute the solution to Ax=b using the preconditioned conjugate gradient method"""
     if x0 is None:
@@ -31,19 +26,23 @@ def pcg(
     if max_iter is None:
         max_iter = A.shape[0]
 
+    # Initialize x, residual
     x = x0
     count = 0
-    residual = b - A @ x
+    residual = b - A(x)
 
-    P = _preconditioners[preconditioner](A)
-    P_inv = torch.inverse(P)
-    direction = P_inv @ residual
+    # Set preconditioner, if there is none
+    if preconditioner is None:
+        P = _identity
+    else:
+        P = preconditioner
+    direction = P(residual)
 
     delta0 = residual.t() @ direction
     delta_new = delta0
 
     while count < max_iter and delta_new / delta0 > (err_tol ** 2):
-        q = A @ direction
+        q = A(direction)
         alpha = delta_new / (direction.t() @ q)
 
         if callable(callback):
@@ -52,11 +51,11 @@ def pcg(
         x += alpha * direction
 
         if count % 50 == 0:
-            residual = b - A @ x
+            residual = b - A(x)
         else:
             residual -= alpha * q
 
-        s = P_inv @ residual
+        s = P(residual)
         delta_old = delta_new
         delta_new = residual.t() @ s
 
@@ -65,6 +64,4 @@ def pcg(
 
         count += 1
 
-    if return_info:
-        return x, {"n_iter": count, "err": delta_new / delta0}
-    return x
+    return x, count

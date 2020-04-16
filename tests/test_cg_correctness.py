@@ -9,6 +9,12 @@ from hessianfree.utils import generate_pd_matrix
 
 
 class TestPCG(unittest.TestCase):
+    def setUp(self):
+        torch.set_default_dtype(torch.float64)
+
+    def tearDown(self):
+        torch.set_default_dtype(torch.float32)
+
     def test_basic(self):
         A = torch.Tensor([[3, 2], [2, 6]])
         b = torch.Tensor([[2], [1]])
@@ -29,14 +35,15 @@ class TestPCG(unittest.TestCase):
 
         for ii in range(ntests):
             A = generate_pd_matrix(n)
+            alo = lambda x: A @ x
             b = torch.rand(n, 1)
 
             cond_A = np.linalg.cond(A.numpy())
 
             torch_solution, _ = torch.solve(b, A)
-            cg_solution, info = pcg(A, b)
+            cg_solution, n_iter = pcg(alo, b, A.shape[0])
 
-            if info["n_iter"] < n:
+            if n_iter < n:
                 n_early_termination += 1
 
             backward_err = torch.dist(b, A @ cg_solution) / (
@@ -53,7 +60,7 @@ class TestPCG(unittest.TestCase):
     def test_multi_dim(self):
         for dim in range(5, 1010, 50):
             print(dim, end=" ")
-            if dim == 55:
+            if dim == 55 or dim == 105:
                 self._test_nd(dim, ntests=100, backward_eps=-3)
             elif dim > 500:
                 self._test_nd(dim, ntests=5)
