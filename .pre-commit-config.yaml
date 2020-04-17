@@ -1,0 +1,57 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+  python: python3.8
+fail_fast: true
+repos:
+  # Start by running formatters/format checkers
+  - repo: https://github.com/psf/black
+    # Auto-format files in-place, super-opinionated to PEP8
+    rev: 19.10b0
+    hooks:
+      - id: black
+        require_serial: true
+        types: [python]
+  - repo: https://github.com/PyCQA/pydocstyle
+    # Catch documentation formatting issues
+    rev: master
+    hooks:
+      - id: pydocstyle
+  - repo: https://gitlab.com/pycqa/flake8
+    # Run flake8, ignoring line length and lines over the line length
+    # We ignore these because we've already settled on formatting
+    rev: 3.7.9
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-bugbear]
+        args:
+          [
+            "--max-line-length=88",
+            "--select=C,E,F,W,B,B950",
+            "--ignore=E203,E501,W503,W293",
+          ]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.761
+    hooks:
+      - id: mypy
+  - repo: https://github.com/doublify/pre-commit-isort
+    rev: v4.3.0
+    hooks:
+      - id: isort
+        args:
+          [
+            "--multi-line=3",
+            "--trailing-comma",
+            "--force-grid-wrap=0",
+            "--use-parentheses",
+            "--line-width=88",
+          ]
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.6.2
+    hooks:
+      - id: bandit
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0
+    hooks:
+      - id: check-yaml
+      - id: check-added-large-files

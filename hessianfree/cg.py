@@ -7,6 +7,16 @@ from hessianfree.types import LinearOperator
 CGCallback = Callable[[torch.Tensor, torch.Tensor, torch.Tensor], Any]
 
 
+def empirical_fisher_diagonal(params, losses) -> torch.Tensor:
+    """Compute the empirical fisher diagonal."""
+    pass
+
+
+def ggn_product(params, loss, outputs, vector) -> torch.Tensor:
+    """Compute vector product with the Generalized Gauss Newton matrix."""
+    pass
+
+
 def _identity(x):
     return x
 
@@ -21,7 +31,7 @@ def pcg(
     err_tol: float = 1e-3,
     callback: Optional[CGCallback] = None,
 ):
-    """Compute the solution to Ax=b using the preconditioned conjugate gradient method"""
+    """Compute the solution to Ax=b using the preconditioned conjugate gradient method."""
     if x0 is None:
         x0 = torch.zeros_like(b)
     if max_iter is None:
