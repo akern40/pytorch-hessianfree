@@ -1,9 +1,10 @@
-from typing import Optional, Callable
+from typing import Callable, Optional, Any
 
 import torch
 
+from hessianfree.types import LinearOperator
 
-LinearOperator = Callable[[torch.Tensor], torch.Tensor]
+CGCallback = Callable[[torch.Tensor, torch.Tensor, torch.Tensor], Any]
 
 
 def _identity(x):
@@ -18,7 +19,7 @@ def pcg(
     preconditioner: Optional[LinearOperator] = None,
     shape: Optional[int] = None,
     err_tol: float = 1e-3,
-    callback: Callable = None,
+    callback: Optional[CGCallback] = None,
 ):
     """Compute the solution to Ax=b using the preconditioned conjugate gradient method"""
     if x0 is None:
