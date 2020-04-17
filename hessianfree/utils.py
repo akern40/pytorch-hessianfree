@@ -31,7 +31,7 @@ def _is_positive_definite(A):
     return all(eig > 0 for eig in eigvals(A))
 
 
-def draw_surface(A, b, pcg_solution, points, directions, alphas):
+def draw_surface(A: np.array, b: np.array, pcg_solution, points, directions, alphas):
     solution = solve(A, b)
     solution_x = solution[0]
     solution_y = solution[1]
@@ -58,7 +58,7 @@ def draw_surface(A, b, pcg_solution, points, directions, alphas):
     plt.show()
 
 
-def draw_surface_3d(A, b):
+def draw_surface_3d(A: np.array, b: np.array):
     solution = solve(A, b)
     solution_x = solution[0]
     solution_y = solution[1]
@@ -76,7 +76,7 @@ def draw_surface_3d(A, b):
     # ax.scatter(solution_x, solution_y, c="w")
 
 
-def get_z(X, Y, A, b):
+def get_z(X: np.array, Y: np.array, A: np.array, b: np.array):
     inputs = np.stack((X, Y), axis=1)
     square_term = np.einsum("bij,ki,bkj->bj", inputs, A, inputs)
     linear_term = np.einsum("ki,bkj->bj", b, inputs)
