@@ -55,10 +55,6 @@ class TestPCG(unittest.TestCase):
                 torch_solution
             )
             if torch.dist(b, A @ cg_solution) > 0:
-                print(
-                    forward_err,
-                    cond_A * torch.dist(b, A @ cg_solution) / torch.norm(b),
-                )
                 assert forward_err <= cond_A * torch.norm(
                     b - A @ cg_solution
                 ) / torch.norm(b)
