@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
 
 import torch
 
@@ -27,15 +27,12 @@ def pcg(
     max_iter: int,
     x0: Optional[torch.Tensor] = None,
     preconditioner: Optional[LinearOperator] = None,
-    shape: Optional[int] = None,
     err_tol: float = 1e-3,
     callback: Optional[CGCallback] = None,
 ):
     """Compute the solution to Ax=b using the preconditioned conjugate gradient method."""
     if x0 is None:
         x0 = torch.zeros_like(b)
-    if max_iter is None:
-        max_iter = A.shape[0]
 
     # Initialize x, residual
     x = x0

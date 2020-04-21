@@ -21,7 +21,7 @@ class TestPCG(unittest.TestCase):
 
         solution = torch.Tensor([[0.7142857909202576], [-0.071428582072258]])
 
-        cg_solution, info = pcg(A, b)
+        cg_solution, info = pcg(lambda x: A @ x, b, A.shape[0])
 
         assert torch.allclose(solution, cg_solution)
 
@@ -54,6 +54,14 @@ class TestPCG(unittest.TestCase):
             forward_err = torch.dist(torch_solution, cg_solution) / torch.norm(
                 torch_solution
             )
+            if torch.dist(b, A @ cg_solution) > 0:
+                print(
+                    forward_err,
+                    cond_A * torch.dist(b, A @ cg_solution) / torch.norm(b),
+                )
+                assert forward_err <= cond_A * torch.norm(
+                    b - A @ cg_solution
+                ) / torch.norm(b)
             back_errors[ii] = backward_err.item()
             forward_errors[ii] = forward_err.item()
 
