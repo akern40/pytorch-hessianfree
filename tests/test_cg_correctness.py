@@ -32,6 +32,7 @@ class TestPCG(unittest.TestCase):
         num_failed = 0
         n_early_termination = 0
         back_errors = np.zeros(ntests)
+        forward_errors = np.zeros(ntests)
 
         for ii in range(ntests):
             A = generate_pd_matrix(n)
@@ -46,12 +47,20 @@ class TestPCG(unittest.TestCase):
             if n_iter < n:
                 n_early_termination += 1
 
+            # ||b - Ax'|| / (||A||*||x'|| + ||b||)
             backward_err = torch.dist(b, A @ cg_solution) / (
                 torch.norm(A) * torch.norm(cg_solution) + torch.norm(b)
             )
+            forward_err = torch.dist(torch_solution, cg_solution) / torch.norm(
+                torch_solution
+            )
             back_errors[ii] = backward_err.item()
+            forward_errors[ii] = forward_err.item()
 
         print(f"{n_early_termination}/{ntests} terminated early")
+        print(
+            f"Forward errors:\n\tMin: {np.min(forward_errors)}\n\tMax: {np.max(forward_errors)}\n\tMean: {np.mean(forward_errors)}\n\tStd Dev: {np.std(forward_errors)}"
+        )
         print(
             f"Backward errors:\n\tMin: {np.min(back_errors)}\n\tMax: {np.max(back_errors)}\n\tMean: {np.mean(back_errors)}\n\tStd Dev: {np.std(back_errors)}"
         )
